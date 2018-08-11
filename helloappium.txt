@@ -1,0 +1,55 @@
+*** Settings ***
+Test Setup        setup
+Test Teardown     teardown
+Library           AppiumLibrary
+
+*** Test Cases ***
+case-001
+    log    2.点击导航
+    Click Element    accessibility_id=ReferenceApp    #id定位点击导航键
+    sleep    1
+    Click Element    xpath=//android.widget.TextView[@text="Home"]    #xpath定位点击HOME键
+    Wait Until Element Is Visible    xpath=//android.widget.ImageButton[@content-desc="ReferenceApp"]
+    Click Element    xpath=//android.widget.ImageButton[@content-desc="ReferenceApp"]    #点击导航键
+    Click Element    android=UiSelector().text("Home")    #使用安卓属性定位，点击HOME键
+    sleep    3
+    comment    PAUST
+    Click Element    class=android.widget.ImageButton    #class定位点击导航键
+    log    3.点击Input Controls
+    Click Element    xpath=(//android.widget.TextView[@content-desc="Row Category Name"])[4]
+    sleep    3
+    log    4.输入Text
+    Input Text    id=com.amazonaws.devicefarm.android.referenceapp:id/drawer_row_title    Text
+    log    5.滑动页面
+    Swipe    691    770    -461    9    #从起始位置到结束位置（x，y）
+    Comment    Swipe By Percent
+    sleep    10
+    Wait Until Page Contains Element    xpath=//*[@text="Toast"]
+
+case-toast
+
+case-context
+    log    2.点击导航
+    Click Element    accessibility_id=ReferenceApp    #id定位点击导航键
+    Wait Until Element Is Visible    xpath=//android.widget.ImageButton[@content-desc="ReferenceApp"]
+    ${x}    Get Contexts    #指运行环境
+    ${y}    Get Current Context
+    Click Element    android=UiSelector().text("Web")
+    ${x}    Get Contexts
+    ${y}    Get Current Context
+    Switch To Context    WEBVIEW_com.amazonaws.devicefarm.android.referenceapp
+    Go To Url    http://www.baidu.com/
+    Wait Until Element Is Visible    id=word
+    Input Text    id=word    appium
+    Click Element    css=input.bn
+
+*** Keywords ***
+setup
+    log    1.打开APP
+    Comment    open application    http://localhost:4723/wd/hub    platformName=Android    platformVersion=7.1.1    deviceName=emulator-5554    app=${CURDIR}/apk/app-release.apk
+    ...    appPackage=com.amazonaws.devicefarm.android.referenceapp    appActivity=.Activities.MainActivity    chromedriverExecutable=D:/senior/drivers/chromedriver28.exe    unicodeKeyboard=true    resetKeyboard=true    newCommandTimeout=3600
+    Open Application    http://localhost:4725/wd/hub
+
+teardown
+    log    恢复测试套环境
+    comment
