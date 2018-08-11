@@ -1,0 +1,21 @@
+*** Variables ***
+${IP}             192.168.144.128
+
+*** Keywords ***
+setup
+    [Arguments]    ${table_name}
+    log    预置条件
+    Connect To Database    pymysql    scott    tester    passwd    192.168.144.128    3306
+    OperatingSystem.run    taskkill /f /im chromedriver.exe    #杀残留的driver进程
+    Execute Sql String    DELETE FROM ${table_name};    #清理脏数据
+    ${x}    Row Count    select * from scott.order_item where name='ipad' and quantity=123;
+    ${y}    Evaluate    str($x+1)
+    log    1，打开网站
+    Open Browser    http://${IP}/mt    chrome
+    Set Global Variable    ${xx}    abc
+
+teardown
+    log    恢复环境
+    Execute Sql String    DELETE FROM order_item where name='ipad' and quantity=123;    #恢复数据库环境
+    Disconnect From Database    #释放数据的连接#
+    Close Browser

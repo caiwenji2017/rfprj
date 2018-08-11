@@ -1,0 +1,131 @@
+*** Settings ***
+Suite Setup       setup    order_item
+Suite Teardown    teardown
+Test Setup        case-setup
+Test Teardown     case-teardown
+Library           SeleniumLibrary
+Library           OperatingSystem
+Library           DatabaseLibrary
+Resource          mtest.txt
+Library           AutoItLibrary
+
+*** Test Cases ***
+Case-01
+    [Documentation]    xxx购物车主要功能
+    [Tags]    high
+    ${x}    Row Count    select * from scott.order_item where name='ipad' and quantity=123;
+    ${y}    Evaluate    str($x+1)
+    log    2，点击自动化测试课程
+    Click Element    link=自动化测试课程    #link定位符
+    Click Element    partial link=接口    #parital link定位符
+    Click Link    自动化测试课程
+    log    3，输入产品名称及数量
+    Wait Until Element Is Visible    id=pay    #等待网页下载成功
+    Input Text    id=ProductName    ipad
+    Input Text    name=Quantity    123
+    log    4，点击提交
+    Click Element    id=submitBtn
+    log    5，确认提交成功
+    log    5.1，确认前端提示信息正确
+    Wait Until Page Contains    你购买了ipad，一共123件。    #等待后台处理15秒，检查提示信息#
+    Comment    Page Should Contain    你购买了ipad，一共123件。    #包含一个文本#
+    ${x}    Get Text    id=msg    #以get开头的都有返回值#
+    Comment    Should Be Equal    ${x}    你购买了ipad，一共123件。    #should开头大部分都是用来做比较的#
+    Should Contain    ${x}    你购买了ipad，一共123件。
+    log    5.2，确认前端购物车信息正确
+    Select Frame    fra    #进入iframe#
+    Select From List By Label    id=buy    产品:ipad,数量:123
+    log    5.3，确认后台数据库订单表信息正确
+    Comment    Comment    PAUSE    #打断点#
+    Wait Until Keyword Succeeds    30    1    Check If Exists In Database    select * from scott.order_item where name='ipad' and quantity=123;    #确实至少有一行##显式等待数据库处理，每30秒尝试一次#
+    Row Count Is Equal To X    select * from scott.order_item where name='ipad' and quantity=123;    ${y}    #确定有，且只有一行#
+    Comment    ${x}    Row Count    select * from scott.order_item where name='ipad' and quantity=123;
+    log    6，点击付款
+    Unselect Frame
+    Click Element    id=pay
+    log    7.弹窗点击确定
+    Handle Alert    ACCEPT    #处理弹窗#
+    log    8.切换到新窗口
+    Select Window    付款
+    ${x}    Get Window Handles    #处理没有名称的弹窗#
+    Select Window    ${x[-1]}
+    log    9.输入付款信息
+    Select From List    id=bank    建设银行
+    Input Text    id=cardno    123456
+    Click Element    id=payfor
+    log    10.付款成功
+    Handle Alert    ACCEPT
+
+Case-02
+    [Documentation]    xxx购物车主要功能
+    [Tags]    high
+    [Template]
+    ${x}    Row Count    select * from scott.order_item where name='ipad' and quantity=123;
+    ${y}    Evaluate    str($x+1)
+    log    2，点击自动化测试课程
+    Click Element    link=自动化测试课程    #link定位符
+    log    3，输入产品名称及数量
+    Wait Until Element Is Visible    id=pay    #等待网页下载成功
+    Execute Javascript    document.getElementById('ProductName').value="ipad"    #输入产品名称#
+    Comment    Input Text    id=ProductName    ipad
+    Execute Javascript    document.getElementById('Quantity').value="123"    #输入数量#
+    Comment    Input Text    //*[@id="Quantity"]    123    #xpath定位符#
+    log    4，点击提交
+    Click Element    id=submitBtn
+    log    5，确认提交成功
+    log    5.1，确认前端提示信息正确
+    Wait Until Page Contains    你购买了ipad，一共123件。    #等待后台处理15秒，检查提示信息#
+    Comment    Page Should Contain    你购买了ipad，一共123件。    #包含一个文本#
+    ${x}    Get Text    id=msg    #以get开头的都有返回值#
+    Comment    Should Be Equal    ${x}    你购买了ipad，一共123件。
+    Should Contain    ${x}    你购买了ipad，一共123件。
+    Click Element    datepicker
+    Click Element    //*[@id="ui-datepicker-div"]/table/tbody/tr[4]/td[4]/a
+    Execute Javascript    document.getElementById('datepicker').readOnly=false    #执行JS#
+    Comment    Input Text    datepicker    07/08/2018    #输入日期#
+    sleep    5
+
+case-03
+    [Template]    tpl_order
+    ipad    123
+    苹果    321
+    小米    456
+
+case-05
+    log    2，点击自动化测试课程
+    Click Element    link=自动化测试课程    #link定位符
+    Wait Until Element Is Visible    link=上传下载demo页面
+    Click Link    上传下载demo页面
+    Wait Until Element Is Visible    id=file
+    Click Element    id=file
+    Win Wait    打开    \    20
+    Win Activate    打开
+    Control Set Text    \    \    Edit1    ${CURDIR}${/}mtest.txt
+    Control Click    \    \    Button1
+    sleep    3
+    Set Selenium Implicit Wait    0    #隐式等待时间，控制浏览器在定位失败时返回相应的时间#	\	\	\
+
+*** Keywords ***
+case-setup
+    Execute Sql String    DELETE FROM order_item;
+
+case-teardown
+    Select Window    #只打开一次浏览器，但是会切换不同的窗口，当case-01不通过时，不会影响case-02的执行#
+
+tpl_order
+    [Arguments]    ${pname}    ${quan}
+    log    2，点击自动化测试课程
+    Click Element    link=自动化测试课程    #link定位符
+    Click Element    partial link=接口    #parital link定位符
+    Click Link    自动化测试课程
+    log    3，输入产品名称及数量
+    Input Text    id=ProductName    ${pname}
+    Input Text    //*[@id="Quantity"]    ${quan}    #xpath定位符#
+    log    4，点击提交
+    Click Element    id=submitBtn
+    log    5，确认提交成功
+    log    5.1，确认前端提示信息正确
+    Comment    Page Should Contain    你购买了${pname}，一共${quan}件。    #包含一个文本#
+    ${x}    Get Text    id=msg    #以get开头的都有返回值#
+    Comment    Should Be Equal    ${x}    你购买了${pname}，一共${quan}件。
+    Should Contain    ${x}    你购买了${pname}，一共${quan}件。

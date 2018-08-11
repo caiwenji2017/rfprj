@@ -1,0 +1,27 @@
+*** Settings ***
+Suite Setup
+
+*** Test Cases ***
+Case-01
+    log    hello world!
+    ${x}    Set Variable    10    # 设置变量x的值为字符串10
+    ${y}    Set Variable    ${10}    # 设置变量y的值为数值10
+    log    ${x}
+    ${l}    Create List    a    b    c    # ['a','b','c']
+    : FOR    ${i}    IN    @{l}    # for循环遍历列表
+    \    log    ${i}
+    ${d}    Create Dictionary    china=中国    usa=美国
+    log    ${d['china']}
+    Run Keyword If    $x=='10'    log    ok
+    Run Keyword If    $y==10    log    pok
+    Should Be Equal    ${x}    10
+    Set Global Variable    ${xx}    abcc    #可以跨测试用例传递变量#
+
+case-002
+    ${x}    Set Variable    ${1}
+    ${y}    Evaluate    ${x}+1
+    ${x}    get time    year mouth day
+    log    ${xx}
+    log    ${CURDIR}${/}mtest.txt    #内置的变量
+    log    ${TEST_NAME}
+    log    %{PATH}
